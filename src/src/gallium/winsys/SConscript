@@ -1,0 +1,29 @@
+Import('*')
+
+if env['dri']:
+	SConscript([
+		'drm/SConscript',
+	])
+	
+if 'xlib' in env['winsys']:
+	SConscript([
+		'xlib/SConscript',
+	])
+
+if 'gdi' in env['winsys']:
+	SConscript([
+		'gdi/SConscript',
+	])
+	
+
+if 'egl_xlib' in env['winsys']:
+	SConscript([
+		'egl_xlib/SConscript',
+	])
+	
+
+if 'remote_xlib' in env['winsys']:
+	SConscript([
+		'remote_xlib/SConscript',
+	])
+	

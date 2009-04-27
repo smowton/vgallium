@@ -1,0 +1,109 @@
+Build instructions for accelerated Gallium i915 GLX and
+EGL drivers on Intel 915/945 machines.
+
+This document needs to be integrated with "Virtualised
+Gallium build instructions". 
+
+
+Pre-requisites:
+
+The build requires a lot of xorg and other graphics development packges.
+I could not manage to track everything... so help yourself for now.
+
+Gallium-0.1 requires DRM with modesetting support and integrated
+GFX-memory manager. Since TTM (TG's GFX memory manager) got cancelled
+after Intels move to the new GEM memory manager we need specific
+revisions of DRM and xf86-video-intel until Gallium is finally
+ported to GEM.
+
+
+1.) DRM with kernel modesetting and TTM bits
+
+checkout:
+git clone git://git.freedesktop.org/git/mesa/drm
+cd drm
+git checkout 9a2adc -b origin/modesetting-101
+
+build and install libdrm:
+./autogen.sh --prefix=/usr
+make
+sudo make install
+
+build and install kernel modules:
+cd linux-core
+make DRM_MODULES="i915"
+cp *.ko /lib/modules/VERSION/kernel/drivers/char/drm/
+
+
+2.) Intel video driver with TTM bits
+
+checkout:
+git clone git://git.freedesktop.org/git/xorg/driver/xf86-video-intel
+cd xf86-video-intel
+git checkout 73321
+git revert 55678
+
+build and install:
+./autogen.sh --prefix=/usr
+make
+sudo make install
+
+
+3.) Gallium 0.1 i915 DRI-GLX and DRI-EGL drivers
+
+The drivers can be built from the vGallium svn repository
+
+checkout:
+svn checkout https://opentc.suse.de/svn/devel/packages/opentc/vgallium
+
+build:
+cd vgallium/trunk/src
+make linux-dri-x86 DRI_DIRS=intel
+
+
+4.) Test
+
+The drivers need drm with ttm support, so it's time to reboot.
+
+The drm subsystem is backwards compatible with "classic" dri
+drivers, so X starts normally and is 3d accelerated.
+
+Gallium and "classic" libGLs can live and run in parallel.
+
+
+test GLX apps:
+
+export LIBGL_DRIVERS_PATH=/home/ubuntu/vgallium/trunk/src/lib/
+export LD_LIBRARY_PATH=/home/ubuntu/vgallium/trunk/src/lib/
+
+glxinfo (should report "gallium")
+
+..now run any glx application, e.g:
+
+glxgears
+
+or
+
+sudo apt-get install openarena; openarena
+
+
+test EGL apps:
+
+shutdown X:
+/etc/init.d/gdm stop
+
+activate kernel modesetting:
+rmmod i915
+rmmod drm
+modprobe i915 modeset=1
+
+(you should have a graphics console now)
+
+cd vgallium/trunk/src/progs/egl
+make
+export LIBGL_DRIVERS_PATH=/home/ubuntu/vgallium/trunk/src/lib/
+export LD_LIBRARY_PATH=/home/ubuntu/vgallium/trunk/src/lib/
+./eglgears
+
+(after egl tests the console remains black.. simply switch to
+another and back again to reactivate)

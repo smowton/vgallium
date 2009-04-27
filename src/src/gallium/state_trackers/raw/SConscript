@@ -1,0 +1,21 @@
+import sys
+import os.path
+
+Import('*')
+
+if 'raw' in env['statetrackers']:
+
+    env = env.Clone()
+    
+    env.Append(CPPPATH = '.')
+#    env.Append(CFLAGS = ['-DCS_DEBUG'])
+
+    rawst = env.ConvenienceLibrary(
+        target = 'rawst',
+        source = [
+	    'st_public.c',
+        ],
+    )
+    
+    Export('rawst')
+

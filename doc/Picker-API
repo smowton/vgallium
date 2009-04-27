@@ -1,0 +1,29 @@
+Picker API Documentation
+------------------------
+
+The "picker" is my name for a utility which communicates with the Xen3D compositor and is in charge of presenting the user with an interface to choose which domain they wish to view and advising the compositor of that choice.
+
+It now has the ability to elect which proportion of its display is shown to the user, with those portions not shown being transparent.
+
+All communications are conducted over a shared-memory inter-domain communications channel, in the same manner as remoted Gallium3D clients.
+
+The messages exchanged between compositor and picker form a dialogue which goes as follows:
+
+1. The user middle-clicks in the compositor window
+2. In response to this, the compositor masks all input events, and sends the picker a "SHOW" message, with parameters stating the domain which was visible before the user middle-clicked, and the dimension of its backdrop (2D framebuffer). This is to allow the picker to centre itself or similar.
+3. The picker, when its user interface is ready and appears as it should be presented to the user, replies with a READY message (which has no parameters).
+4. In response to this, the compositor begins directing input events to the picker, and begins drawing the picker's domain overlaid upon the previously shown domain.
+5. After some interaction with the user, the picker sends a CHOOSE_DOMAIN message nominating which domain should next be shown.
+6. The compositor switches to showing the new domain, and hides the picker domain.
+
+In addition to these commands, the picker can submit a SET_CLIPS message at any time. this specifies i) the offset at which the picker domain should be drawn with respect to the top-left corner of the compositor window, and ii) a list of rectangles defining OPAQUE regions of its framebuffer (so if there are no rectangles, it is fully transparent and the user will be confused).
+
+Typically this might be used between the SHOW and READY commands above, and indeed this is why the compositor waits for READY rather than showing the picker right away -- for example, it might take note of the stated size of the underlying domain from the SHOW command, set up its user interface appropriately, SET_CLIPS such that it is centred and transparent, and then say READY.
+
+Notes:
+
+1. The clip rectangles can extend outside the picker domain's framebuffer. This doesn't do any harm, but doesn't make any sense.
+2. If there was no visible domain before the user middle-clicked then the SHOW message will give the previous domain as -1. In this case the previous-domain-size attributes are meaningless and may be undefined.
+3. It is possible for the picker to domain to nominate itself as the next domain. When the user middle-clicks it may be overlaid on itself, possibly with some offset, which will look weird, so in this situation the picker should probably SET_CLIP such that it is invisible before saying READY.
+4. If the picker nominates a domain which does not exist, the compositor continues to display the previous domain.
+5. 3D clients are not drawn for the picker domain in its capacity as an overlay. This is because I couldn't be arsed to write the code to clip all the 3D guys by *another* set of constraints :) Running 3D clients won't cause any harm though; they'll just appear black.

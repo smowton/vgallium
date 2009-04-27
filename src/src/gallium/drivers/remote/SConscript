@@ -1,0 +1,18 @@
+Import('*')
+
+env = env.Clone()
+
+env.Append(CFLAGS = [ '-std=c99' ])
+
+env.Append(CPPPATH = ['.', '../../winsys/remote_xlib'])
+
+remote = env.ConvenienceLibrary(
+    target = 'remote',
+    source = [
+        'tr_context.c',
+        'tr_screen.c',
+        'remote_comms.c',
+	'debug.c'
+    ])
+
+Export('remote')

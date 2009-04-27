@@ -1,0 +1,8 @@
+The distilled X extension! Derived from VMGL's similar X extension.
+
+These files need to be planted within a complete X.org source tree prior to building.
+
+ext/configure.ac goes in /xserver, ext/Makefile.am in /xserver/hw/xfree86/dixmods.
+The source files under ext/ go in the same place.
+
+All stuff under xen3dproto/ goes in proto/xen3dproto

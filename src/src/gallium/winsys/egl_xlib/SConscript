@@ -1,0 +1,41 @@
+#######################################################################
+# SConscript for xlib winsys
+
+Import('*')
+    
+if env['platform'] == 'linux' \
+	and 'raw' in env['statetrackers'] \
+	and 'softpipe' in env['drivers'] \
+	and not env['dri']:
+	
+    env = env.Clone()
+
+# Mesa enters this list solely for the state-tracker public exports.
+# Should amend the EGL winsys files, since I've copied the exports to include where it
+# probably should've been anyway
+
+    env.Append(CPPPATH = [
+	'#/src/egl/main',
+	'#/src/mesa',
+    ])
+    
+    env.Append(CFLAGS = [
+	'-D_EGL_PLATFORM_X=1',
+    ])
+
+    sources = [
+        'egl_xlib.c',
+        'sw_winsys.c',
+    ]
+    
+    drivers = [
+	softpipe
+    ]
+    
+    librawgal = env.SharedLibrary(
+	target = 'rawgal',
+	source = sources,
+	LIBS = rawst + drivers + auxiliaries + env['LIBS'],
+    )
+    
+    env.InstallSharedLibrary(librawgal, version=(0,1)) 

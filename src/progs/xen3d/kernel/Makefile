@@ -1,0 +1,26 @@
+obj-y	+= core/
+obj-y	+= console/
+obj-y	+= evtchn/
+obj-y	+= xenbus/
+obj-y	+= char/
+
+obj-y	+= util.o
+obj-$(CONFIG_XEN_BALLOON)		+= balloon/
+obj-$(CONFIG_XEN_BLKDEV_BACKEND)	+= blkback/
+obj-$(CONFIG_XEN_BLKDEV_TAP)		+= blktap/
+obj-$(CONFIG_XEN_NETDEV_BACKEND)	+= netback/
+obj-$(CONFIG_XEN_TPMDEV_BACKEND)	+= tpmback/
+obj-$(CONFIG_XEN_BLKDEV_FRONTEND)	+= blkfront/
+obj-$(CONFIG_XEN_NETDEV_FRONTEND)	+= netfront/
+obj-$(CONFIG_XEN_PCIDEV_BACKEND)	+= pciback/
+obj-$(CONFIG_XEN_PCIDEV_FRONTEND)	+= pcifront/
+obj-$(CONFIG_XEN_FRAMEBUFFER)		+= fbfront/
+obj-$(CONFIG_XEN_KEYBOARD)		+= fbfront/
+obj-$(CONFIG_XEN_SCSI_BACKEND)		+= scsiback/
+obj-$(CONFIG_XEN_SCSI_FRONTEND)		+= scsifront/
+obj-$(CONFIG_XEN_PRIVCMD)	+= privcmd/
+obj-$(CONFIG_XEN_GRANT_DEV)	+= gntdev/
+obj-$(CONFIG_XEN_GRANT_MEM)	+= gntmem/
+obj-$(CONFIG_XEN_NETDEV_ACCEL_SFC_UTIL)		+= sfc_netutil/
+obj-$(CONFIG_XEN_NETDEV_ACCEL_SFC_FRONTEND)	+= sfc_netfront/
+obj-$(CONFIG_XEN_NETDEV_ACCEL_SFC_BACKEND)	+= sfc_netback/

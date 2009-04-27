@@ -1,0 +1,23 @@
+diff -r -uN Hermes-1.3.3-old//configure.in Hermes-1.3.3/configure.in
+--- Hermes-1.3.3-old//configure.in	2009-03-18 16:26:56.000000000 +0000
++++ Hermes-1.3.3/configure.in	2009-03-18 16:27:36.000000000 +0000
+@@ -145,8 +145,6 @@
+ 
+ CCAS=$CC
+ CCASFLAGS=$CFLAGS
+-AR_COMPILER=$CC
+-AR_FLAGS=$CFLAGS
+ 
+ dnl let's keep autoconf 2.5 happy
+ AS=$CC
+@@ -156,10 +154,7 @@
+ AC_SUBST(CCASFLAGS)
+ 
+ 
+-
+-AC_SUBST(AR_FLAGS)
+ AC_SUBST(AR_ASM_OBJECTS)
+-AC_SUBST(AR_COMPILER)
+ AC_SUBST(AR_ASM_FLAGS)
+ AC_SUBST(HERMES_LIBS)
+ 

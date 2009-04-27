@@ -1,0 +1,341 @@
+------------------------------------------------------------------------
+r40 | cs448 | 2008-10-27 14:30:51 +0000 (Mon, 27 Oct 2008) | 3 lines
+
+Add another missing file
+
+
+------------------------------------------------------------------------
+r39 | cs448 | 2008-10-27 14:14:38 +0000 (Mon, 27 Oct 2008) | 3 lines
+
+Add missing file
+
+
+------------------------------------------------------------------------
+r38 | cs448 | 2008-10-27 12:55:26 +0000 (Mon, 27 Oct 2008) | 5 lines
+
+Add the distilled workings of an X extension, derived from VMGL's X extension. The testapp includes a program which requests itself to be monitored for clipping changes, and a receiver which connects to the X server and receives the resulting cliprects.
+
+This is just the vital parts; to build everything must be planted in a complete Xorg tree; the README file describes which files go where.
+
+
+------------------------------------------------------------------------
+r37 | cs448 | 2008-10-20 12:33:19 +0100 (Mon, 20 Oct 2008) | 5 lines
+
+Finished debugging :) All the OpenGL demos now run as well as softpipe alone. There are a number of bugs in softpipe however :)
+
+Next: X integration using VMGL's X extension.
+
+
+------------------------------------------------------------------------
+r36 | cs448 | 2008-10-17 17:09:38 +0100 (Fri, 17 Oct 2008) | 3 lines
+
+Fixed lots more bugs, most of which are accompanied by comments in the source. One pointed bug remains that I know of (and which I can't attribute to TG): demo pointblast crashes on attempting to access a TGSI constant... from a fragment shader without any constant terms. That is, from a corrupted FS :(
+
+
+------------------------------------------------------------------------
+r35 | cs448 | 2008-10-16 17:42:34 +0100 (Thu, 16 Oct 2008) | 3 lines
+
+Fixed a bunch of bugs; the gears now run fine, as do some pixel-shading demos. HOWEVER! There is definitely memory corruption occurring on the client in both cubemap and bounce; suspect the surface map/unmap code is to blame at the moment.
+
+
+------------------------------------------------------------------------
+r34 | cs448 | 2008-10-16 12:04:04 +0100 (Thu, 16 Oct 2008) | 5 lines
+
+Fixed the flickering gears bug; turns out both the constant buffers and rasterizer were fine; I was stupidly calling user_buffer_create in response to a user_buffer_create from the remote, mapping part of a network packet which was subsequently overwritten. D'oh.
+
+Fixed up for now by calling standard buffer_create and copying the data in; when shared memory is a reality this might be changed again.
+
+
+------------------------------------------------------------------------
+r33 | cs448 | 2008-10-15 17:31:01 +0100 (Wed, 15 Oct 2008) | 13 lines
+
+The performance enhancements resulting from optimising buffer handling (not completely done, but good enough for glxgears) plus replacing draw-textured-quad with surface-copy for now mean that the framerate of a single Gears has increased from 0.5 to 50!
+
+On the downside, the optimisations mean that the client currently needs to determine when its buffers could possibly be dirty (e.g. when they have been used to hold shaders' outputs (?)); currently it doesn't keep track of that and will always assume its local copy is up to date.
+
+All of this should go away when we move to using Xenbus and shared memory, as buffers (perhaps except for user buffers) will really exist in shared memory and can be mapped cheaply by both sides without needing to shuttle data back and forth.
+
+Surfaces will remain an interesting question: do they go in shared memory, or exist only in graphics card land? Probably the best thing would be to check the usage parameters and store CPU-accessible ones in SHM and GPU-only ones out of band. Problem: on the host, I'm not in charge of buffer management; I can create_user_buffer for buffers, but surfaces will be located by the driver...
+
+Final problem: glxgears currently flashes alarmingly between bright colours like it should have, and dull colours which look like the same object out of the light. This suggests the light's orientation or the vertices' normals are getting chewed up.
+
+
+
+
+------------------------------------------------------------------------
+r32 | cs448 | 2008-10-15 12:02:19 +0100 (Wed, 15 Oct 2008) | 7 lines
+
+Finished the first phase of debugging, including swapping in a buffer-copy strategy for now as buffer swapping was very hairy.
+
+Still a weird bug which causes glxgears to sometimes appear bright, sometimes dim. To find out what's going on there.
+
+Also it's very slow at the moment: to try batching commands.
+
+
+------------------------------------------------------------------------
+r31 | cs448 | 2008-10-14 18:11:39 +0100 (Tue, 14 Oct 2008) | 3 lines
+
+Lots more debugging... halfway through converting it to do double-buffering in terms of textures rather than surfaces.
+
+
+------------------------------------------------------------------------
+r30 | cs448 | 2008-10-13 17:18:56 +0100 (Mon, 13 Oct 2008) | 3 lines
+
+Applied that solution: still broken though due to broken map implementation... so TODO: write something to dump the full map for debugging purposes!
+
+
+------------------------------------------------------------------------
+r29 | cs448 | 2008-10-13 16:39:36 +0100 (Mon, 13 Oct 2008) | 7 lines
+
+Debugged to remove most of the really silly errors.
+
+However, ran into a fairly major problem: my current strategy of always makeCurrent'ing a context before operating on it is not 'right'. In the real world, it looks as though the Mesa drivers make calls against a context (and its associated screen) before the user has make-current'd it for the first time.
+
+This means that I need to do the same, and perhaps never eglMakeCurrent for myself, imitating its actions using setFramebufferState?
+
+
+------------------------------------------------------------------------
+r28 | cs448 | 2008-10-13 11:11:00 +0100 (Mon, 13 Oct 2008) | 3 lines
+
+It compiles, it runs, and some debugging code added; now to get GLXGears running :)
+
+
+------------------------------------------------------------------------
+r27 | cs448 | 2008-10-10 17:07:29 +0100 (Fri, 10 Oct 2008) | 7 lines
+
+Mostly debugged to the point of compilation; still to do on monday: I wrote the swapbuffers code assuming it deals in surfaces, like the set_framebuffer_state call, but in fact it deals in textures.
+
+Either simply flip that around, calling st_get_framebuffer_surface on the client, or else reverse the situation on the server.
+
+Also still need to add debugging prints.
+
+
+------------------------------------------------------------------------
+r26 | cs448 | 2008-10-10 13:09:47 +0100 (Fri, 10 Oct 2008) | 3 lines
+
+Finished the first go at writing the compositor. Next: debug to the point it compiles and add debugging prints everywhere.
+
+
+------------------------------------------------------------------------
+r25 | cs448 | 2008-10-09 17:58:40 +0100 (Thu, 09 Oct 2008) | 6 lines
+
+
+Finished all the writing apart from the actual drawing of the master context, the process of determining which textures to display, and buffer flipping.
+
+Also, haven't yet compiled or debugged.
+
+
+------------------------------------------------------------------------
+r24 | cs448 | 2008-10-09 15:56:29 +0100 (Thu, 09 Oct 2008) | 4 lines
+
+
+Wrote all receiving ends of the proxying framework; now all that remains is to plumb in some actual drawing code. Also the proxies still need debugging.
+
+
+------------------------------------------------------------------------
+r23 | cs448 | 2008-10-09 11:21:24 +0100 (Thu, 09 Oct 2008) | 3 lines
+
+finished generating stub methods
+
+
+------------------------------------------------------------------------
+r22 | cs448 | 2008-10-08 17:02:56 +0100 (Wed, 08 Oct 2008) | 3 lines
+
+Missed one :)
+
+
+------------------------------------------------------------------------
+r21 | cs448 | 2008-10-08 17:01:52 +0100 (Wed, 08 Oct 2008) | 5 lines
+
+More work on producing a working dispatcher and the get-size-of-message function.
+
+To do tomorrow: a third generator for function stubs, and write the actual generators.
+
+
+------------------------------------------------------------------------
+r20 | cs448 | 2008-10-08 16:39:13 +0100 (Wed, 08 Oct 2008) | 6 lines
+
+
+Organised the directory structure a bit, and wrote the beginnings of the networking glue for the compositor.
+
+Generate switches is my C equivalent of what really ought to be a sed script, if I knew sed.
+
+
+------------------------------------------------------------------------
+r19 | cs448 | 2008-10-08 13:02:42 +0100 (Wed, 08 Oct 2008) | 3 lines
+
+Created a test which simply accepts a screen creation request and satisfies it; debugged to the point that it passes. Next: create the complete receiver, i.e. write a giant switch statement.
+
+
+------------------------------------------------------------------------
+r18 | cs448 | 2008-10-08 11:01:19 +0100 (Wed, 08 Oct 2008) | 4 lines
+
+
+Added debugging code, plus debugged a couple of functions which looked wrong whilst I was doing so; specifically, the buffer mapping/unmapping code now refcounts maps and unmaps like the equivalent code for surfaces, and the surface code now transmits an updated version of the surface to the remote side when it might have changed (i.e. when it's been mapped R/W), like the equivalent buffer mapping code.
+
+
+------------------------------------------------------------------------
+r17 | cs448 | 2008-10-07 17:27:48 +0100 (Tue, 07 Oct 2008) | 9 lines
+
+
+Everything now compiles; added debugging information so that I can see the
+command stream and compare it with what the server receives.
+
+Tomorrow: finish adding DBG() statements, start writing the compositing server.
+
+Final step: integrate with the VMGL project's X extension to direct the compositing.
+
+
+------------------------------------------------------------------------
+r16 | cs448 | 2008-10-07 16:18:36 +0100 (Tue, 07 Oct 2008) | 3 lines
+
+Debugged to the point that it compiles :)
+
+
+------------------------------------------------------------------------
+r15 | cs448 | 2008-10-07 12:32:56 +0100 (Tue, 07 Oct 2008) | 3 lines
+
+Wrote the glue logic around creation of screens and the winsys (both are singletons), and implemented a dead simple communications layer which just forwards everything over a TCP connection for now.
+
+
+------------------------------------------------------------------------
+r14 | cs448 | 2008-10-06 17:02:36 +0100 (Mon, 06 Oct 2008) | 5 lines
+
+Created all message structures and enums.
+
+To do next: glue code for context creation (plan: a singleton screen and winsys), write the communications part (i.e. implement all the macros I used in p_context.c etc), and finally write the "server" side which will actually listen to and make use of this stuff.
+
+
+------------------------------------------------------------------------
+r13 | cs448 | 2008-10-06 14:25:21 +0100 (Mon, 06 Oct 2008) | 11 lines
+
+Tidy folder structure, and merge my remote driver's basic winsys with the Xlib winsys.
+
+As it turned out, *very* little modification was necessary: simply switched out XMesaSwapBuffers' call to xmesa_display_image, which copies a given Gallium surface into an XWindow, for the generation of a message, which informs the host program that it should copy and display the associated texture.
+
+Didn't need to proxy the context creation function here, since the pipe driver already does that. Did however modify it to call the remote driver's creation functions rather than the softpipe / Intel ones.
+
+The missing bit, then, is that whilst this driver will successfully create windows, pixmaps, pbuffers, etc, and generate a framebuffer object and associated (remote) textures for all of them, it, and the X server, have no concept of where they go on the screen, and indeed which ones are to be displayed at all.
+
+For now I will hack around this by displaying all textures associated with a context which have been SwapBuffers'd at some point (a good indicator they are render targets), but in the long term the solution is an X server extension, which I am hoping to borrow from the VMGL project.
+
+
+------------------------------------------------------------------------
+r12 | cs448 | 2008-10-06 11:33:19 +0100 (Mon, 06 Oct 2008) | 3 lines
+
+Clone the xlib winsys layer into remote_xlib, and remove Intel AUB-specific files. Plan: modify XMesa here to relay certain important commands over the wire, such as flip buffers.
+
+
+------------------------------------------------------------------------
+r11 | cs448 | 2008-10-03 16:58:02 +0100 (Fri, 03 Oct 2008) | 5 lines
+
+Finished replacing context, screen and winsys code with proxy methods.
+
+Next up: finish remote_messages.h, which contains structs for each message, figure out how minimally I can implement GLX, and write the receiving end (userland program like the compositing examples)
+
+
+------------------------------------------------------------------------
+r10 | cs448 | 2008-09-29 17:53:18 +0100 (Mon, 29 Sep 2008) | 18 lines
+
+Cloned the trace driver to produce remoted driver. Thus far, have 
+adapted most of the pipe_context methods; to do, everything from 
+query objects upward in context, the screen methods (texture 
+creation) and a window system.
+
+Points for consideration: how to integrate with GLX? Need to post 
+swapBuffers to the remote side. The window system for this test 
+can simply notify of swap-buffers events; in future it will need 
+to collaborate with the X Server to determine window layering and 
+receive resize commands etc.
+
+In the short term can probably hack the Xlib window system, which 
+supports Softpipe over X, by simply removing the actual local 
+drawing code for now, then in future re-adding the XWindow 
+creation and location management and using either DRI or something 
+DRI-like to control the draw order.
+
+
+------------------------------------------------------------------------
+r9 | cs448 | 2008-09-29 14:25:10 +0100 (Mon, 29 Sep 2008) | 4 lines
+
+Modified xlib's SConscript to build without i965simple (in the long 
+term it should build with softpipe, i965 or both)
+
+
+------------------------------------------------------------------------
+r8 | cs448 | 2008-09-29 12:11:12 +0100 (Mon, 29 Sep 2008) | 19 lines
+
+New test; this one tests two rendering clients with different 
+frame-rates, and introduces double buffering for the clients for the 
+first time.
+
+Pleasingly this also eliminates the bug encountered with rawgal_comp, 
+since a buffer flip is always accompanied by a change in the master 
+context's bound textures.
+
+It might *still* be illegal to simeltaneously bind textures for 
+reading and writing, and to make this work with hardware drivers I 
+might need to release the write-binding explicitly, but changes in 
+texture ownership between contexts is surely allowable at the 
+hardware level, what with things like Aero and Compiz existing.
+
+Next up: 2D contexts drawing into textures, and the first clash with 
+Xen: supplant its SDL drawing backend with one drawing into 
+textures?
+
+
+------------------------------------------------------------------------
+r7 | cs448 | 2008-09-29 11:37:40 +0100 (Mon, 29 Sep 2008) | 9 lines
+
+Isolated the exact cause of the bug, though it is cause for concern. 
+Need to find out whether my method of compositing is strictly 
+illegal, and whether it only works by coincidence with the softpipe.
+
+Perhaps a question for the DRI mailing list there.
+
+See the comments in xegl_rawgal_comp.c for more detail.
+
+
+------------------------------------------------------------------------
+r6 | cs448 | 2008-09-28 16:12:35 +0100 (Sun, 28 Sep 2008) | 5 lines
+
+Add a test for compositing; this is mostly working, but fails with an odd bug wherein after the initial frame of drawing, only the top-left 64x64 tile of the texture gets drawn!
+
+SConstruct also modified to specify some extra debug flags to try to figure out what's happening there...
+
+
+------------------------------------------------------------------------
+r5 | cs448 | 2008-09-26 11:58:31 +0100 (Fri, 26 Sep 2008) | 5 lines
+
+Add working test drawing a textured quad; add animation to both tests.
+
+Next step: compositing!
+
+
+------------------------------------------------------------------------
+r4 | cs448 | 2008-09-26 11:07:18 +0100 (Fri, 26 Sep 2008) | 3 lines
+
+Debugged to the point that test rawgal_tri now passes. The main problem was that the front and back buffers are simply swapped around when reported to the pipe in the case of double-buffered rendering.
+
+
+------------------------------------------------------------------------
+r3 | cs448 | 2008-09-25 15:34:54 +0100 (Thu, 25 Sep 2008) | 4 lines
+
+Added a header for users of raw Gallium interface, debugged the simple state tracker, pared down what could be safely removed from it, and created two tests which use the raw interface; init simply creates and destroys a context to test the state tracker, whilst tri ought to draw a triangle (but presently gives a black window).
+
+
+
+------------------------------------------------------------------------
+r2 | cs448 | 2008-09-25 10:01:45 +0100 (Thu, 25 Sep 2008) | 3 lines
+
+Tidy the repo by removing a few accidentally added binaries, plus tweaks to the SConscripts to properly compile the EGL components supporting X.
+
+
+------------------------------------------------------------------------
+r1 | cs448 | 2008-09-24 16:32:38 +0100 (Wed, 24 Sep 2008) | 4 lines
+
+
+Initial commit; putting the Mesa tree in a repo as need to make sparse modifications and track them later
+
+
+------------------------------------------------------------------------

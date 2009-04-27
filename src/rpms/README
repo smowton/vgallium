@@ -1,0 +1,41 @@
+Here lie binary RPMs for the Vgallium / Xen3d system as a whole, as well as (most) source and spec files required to generate them.
+
+Broadly speaking there is:
+
+vgallium.spec
+-------------
+
+These are built using pretty much the entire Mesa tree in the build process; they require a source file named opentc-repo-snapshot.tar.bz2 to produce RPMs. This is produced as follows:
+
+1. Check out a clean copy of the repo
+2. svn export vgallium/branches/xen-idc/src to a directory named opentc-repo-snapshot
+3. Run tar cvjf opentc-repo-snapshot/ opentc-repo-snapshot.tar.bz2
+
+This spec produces four binary RPMs: vgallium-driver-softpipe (for dom0,) vgallium-remoting-libgl (for domu,) xen3d-compositor (for dom0) and xen3d-daemon-domu (for domu).
+
+The compositor is installed as /usr/bin/xen3d; it requires the environment variable EGL_DRIVER set, e.g. to 'librawgal'.
+
+The compositor package also installs libEGL.so, as I couldn't find any existing package which does so.
+
+vgallium-driver-softpipe places librawgal.so in /usr/lib; it is used by the compositor as described above.
+
+vgallium-remoting-libgl places libGL.so in /usr/lib/vgallium; the local system must be manually directed to use that or the real libGL, using ldconfig or LD_LIBRARY_PATH or whatever.
+
+xen-vgallium
+------------
+
+Builds a replacement for xen-tools, with qemu and xend modified as needed for a Vgallium dom0. This requires the xen SRPM installed to provide the Xen source and all the OpenSuSE patches, then applies sources/otc-xen.diff to apply my changes. Must be installed *instead of* xen-tools in dom0.
+
+xorg-x11-vgallium-extension
+---------------------------
+
+Builds the Vgallium X extension by building pretty much the entire Xorg server and extracting the right libs. Again I'm sure there could be a slimmer build process but discovering it requires time. Needs the xorg-x11-server SPRM for the Xorg core source tarball plus OpenSuSE's X patches.
+
+THINGS THE RPMS DO NOT DO
+-------------------------
+
+1. Modify your Xorg.conf to load the xen3d extension in the guest
+2. Modify ldconfig to cause the remoting libgl to be the default
+3. Ensure that they are careful replacing xen-tools
+4. Perhaps some other things which I forget, as
+5. Get enough testing; time is lacking
