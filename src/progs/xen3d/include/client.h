@@ -163,6 +163,8 @@ struct global_state {
   int control_dom_n_clip_rects;
   struct xen3d_clip_rect* control_dom_clip_rects;
 
+  int control_domain_enabled;
+
 };
 
 struct client_screen {

@@ -424,7 +424,7 @@ void draw_domain_with_clip_and_offset(struct global_state* state,
 	width = MIN(rects[i].w, width);
 	int height = MIN(domain->backdrop_height - rects[i].y, backBuffer->height - dest_y);
 	height = MIN(rects[i].h, height);
-	printf("Drawing to offset (%d, %d) with width (%d, %d)\n", dest_x, dest_y, width, height);
+	DBG("Drawing to offset (%d, %d) with width (%d, %d)\n", dest_x, dest_y, width, height);
 
 	pipe->surface_copy(pipe, 0, 
 			   backBuffer, dest_x, dest_y, // Domain desktop coords

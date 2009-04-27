@@ -2394,8 +2394,23 @@ void main_loop(struct xs_handle* xenstorehandle, int xenstorefd, int evtchnhandl
     int switch_domains = handle_x_events(global_state);
 
     if(switch_domains) {
-      if(!notify_controller(global_state)) {
-	printf("No domain controller connected; could not notify\n");
+      if(global_state->control_domain_enabled) {
+	if(!notify_controller(global_state)) {
+	  printf("No domain controller connected; could not notify\n");
+	}
+      }
+      else {
+	if(!global_state->current_domain) {
+	  global_state->current_domain = *global_state->domain_list_head;
+	  if(!global_state->current_domain) {
+	    printf("No domains currently connected\n");
+	  }
+	}
+	else {
+	  global_state->current_domain = global_state->current_domain->next;
+	  if(!global_state->current_domain)
+	    global_state->current_domain = *global_state->domain_list_head;
+	}
       }
       /*      if(!switch_to_domain(global_state, global_state->trusted_domain)) {
 	printf("Couldn't switch to domain %d\n", global_state->trusted_domain);
@@ -2748,6 +2763,8 @@ int main(int argc, char** argv) {
   global_state.control_dom_off_y = 0;
   global_state.control_dom_n_clip_rects = 0;
   global_state.control_dom_clip_rects = 0;
+
+  global_state.control_domain_enabled = 1;
   
   memset(&global_state.domain_control_receiver, 0, sizeof(struct receiver));
 
@@ -2761,10 +2778,19 @@ int main(int argc, char** argv) {
       }
       else {
 	sscanf(argv[i+1], "%d", &global_state.trusted_domain);
-	printf("Making domain %d trusted\n", global_state.trusted_domain);
+    	printf("Making domain %d trusted\n", global_state.trusted_domain);
+	i++;
       }
     }
+    else if(!strncmp(argv[i], "--no-trusted-domain", 19)) {
+      printf("Not using a trusted domain; middle-click to cycle domains\n");
+      global_state.control_domain_enabled = 0;
+    }
 
+  }
+
+  if(global_state.control_domain_enabled == 0 && global_state.trusted_domain != 0) {
+    printf("A control domain was specified, and also disabled. These options are incompatible; running without a control domain\n");
   }
 
   main_loop(xsh, xenstorefd, xceh, evtchnfd, qemulistenfd, &global_state);

@@ -1,0 +1,8 @@
+Control domains
+---------------
+
+The Xen3D compositor has two possible ways of selecting which single domain is currently shown on screen:
+
+1. Using a control domain. Under this model, when the user middle-clicks in the compositor window, a control domain is displayed overlaid atop the currently visible domain, and that domain is responsible for selecting which domain is shown next. The domain must run a special "picker" program to handle this decision process; see the file Picker-API for details. The control domain is nominated at compositor startup with a switch like --trusted-domain 3. As domains must connect after the compositor has started, you must currently anticipate what its DomID will be.
+
+2. Not using a control domain. Start the compositor with the switch --no-trusted-domain; then when you middle-click in the compositor window it will cycle between domains.
