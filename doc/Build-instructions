@@ -23,6 +23,7 @@ Current limitations
 -------------------
 
 Whilst the compositor now runs on both x86-64 and x86, as my primary testing rig is 64-bit this target is better tested.
+Note: replace all the text referring to "linux-x86-64" to "linux-x86" in case you are compiling for Intel 32bit systems.
 
 None of the components currently implement any sort of connection resumption; the compositor must be running before guest domains start, and will not pick them back up if it is terminated and restarted.
 
@@ -45,15 +46,14 @@ Step 1: Installing the X extension headers
 Required packages (Ubuntu): build-essential, autoconf, automake
 Required packages (SuSE): gcc, binutils, make, autoconf, automake
 
-First, we must install the header files used in communication with the X extension, as these are required to build most parts of vgallium.
+First, we must install the header files used in communication with the X extension, as these are required to build most parts of xen3d.
 
 These instructions will install the headers to /usr/include.
 
 If you wish to install the headers elsewhere, use --prefix=/myfolder instead of /usr; the headers will be installed to /myfolder/include. This option will require modifications to some Makefiles later in the process; this is noted in the appropriate places.
 
-cd to vgallium/trunk/src/progs/xen3d/xext/xen3dproto
+cd to branches/xen-idc/src/progs/xen3d/xext/xen3dproto
 ./autogen.sh --prefix=/usr
-make
 make install
 
 ====================
@@ -73,7 +73,7 @@ Unpack the tarball and run 'make install-kernels'; it will set about downloading
 
 Now, there will a directory under the root of the Xen tree called linux-2.6.18-xen.hg. Within this directory,
 
-Calling the root of that Linux tree L, and (vgallium repo root)/src/progs/xen3d/kernel V,
+Calling the root of that Linux tree L, and branches/xen-idc/src/progs/xen3d/kernel V,
 
 1. copy V/gntmem, V/KConfig and V/Makefile to L/drivers/xen
 2. copy V/gnttab.c to L/drivers/xen/core
@@ -96,12 +96,12 @@ Required packages (Ubuntu): python-dev, libssl-dev, libncurses
 
 On the guest, and in the root of the Xen repository described in the previous section, run make install-tools.
 
-From the vgallium repo, copy src/progs/xen3d/kernel/gntmem.h to /usr/include/xen/sys/gntmem.h.
+From the xen3d repo, copy branches/xen-idc/src/progs/xen3d/kernel/gntmem.h to /usr/include/xen/sys/gntmem.h.
 
 Step 3: Building the helper daemon
 ----------------------------------
 
-In (vgallium repo route)/src/progs/xen3d/xen3dd, run make.
+In (xen3d repo, branches/xen-idc/src/progs/xen3d/xen3dd, run make.
 
 The binary built here is called xen3dd and must be running for the X extension
 or 3D applications to communicate with the compositor.
@@ -132,7 +132,7 @@ Under XORG_ROOT/xserver/hw/xfree86/dixmods,
 	b. Somewhere in the variable assignments at the beginning, add 
 	  'libxen3dext_la_LDFLAGS = -avoid-version' and 
 	  'libxen3dext_la_SOURCES = Xen3DModule.c Xen3DExtension.c'
-    2. Copy in Xen3DExtension.c and Xen3DModule.c from vgallium/trunk/src/progs/xen3d/xext/ext
+    2. Copy in Xen3DExtension.c and Xen3DModule.c from branches/xen-idc/src/progs/xen3d/xext/ext
 
 NOTE: If you installed the X extension headers to a location other than /usr/include, this will need to be accounted for in order for the X extension to build. TODO: Find out how to properly do this.
 
@@ -152,16 +152,18 @@ Finally, add 'load "xen3dext"' to the "Module" section of your Xorg.conf file.
 Step 5: Building the client libGL.so
 ------------------------------------
 
-NOTE: The file vgallium/trunk/src/src/gallium/winsys/remote_xlib/SConscript currently searches /usr/include/X11/extensions for the X extension header files. This path will need to be altered if you did not install those headers in this location.
+Required packages: scons
 
-cd to vgallium/trunk/src
+NOTE: The file branches/xen-idc/src/src/gallium/winsys/remote_xlib/SConscript currently searches /usr/include/X11/extensions for the X extension header files. This path will need to be altered if you did not install those headers in this location.
+
+cd to branches/xen-idc/src
 run 'scons statetrackers=mesa drivers=remote winsys=remote_xlib dri=no'
 
-This should generate vgallium/trunk/src/build/linux-x86-64/lib/libGL.so. Programs wishing to remote their drawing must be directed to load this library rather than the platform's standard GL library using something like
+This should generate branches/xen-idc/src/build/linux-x86-64/lib/libGL.so. Programs wishing to remote their drawing must be directed to load this library rather than the platform's standard GL library using something like
 
-  LD_LIBRARY_PATH=.../vgallium/trunk/src/build/linux-x86-64/lib glxgears
+  LD_LIBRARY_PATH= branches/xen-idc/src/build/linux-x86-64/lib glxgears
   
-Some applications also use GLUT to manage window creation, input event handling and so forth; these applications can use the standard glut, though its path should be added to LD_LIBRARY_PATH *after* the above build path, as it will also contain the standard GL library which we do not wish to use in preference to the remoting version. If the GLUT is not already available, it can be built in vgallium/trunk/src/lib64 by running 'make linux-x86-64' in vgallium/trunk/src.
+Some applications also use GLUT to manage window creation, input event handling and so forth; these applications can use the standard glut, though its path should be added to LD_LIBRARY_PATH *after* the above build path, as it will also contain the standard GL library which we do not wish to use in preference to the remoting version. If the GLUT is not already available, it can be built in branches/xen-idc/src/lib64 by running 'make linux-x86-64' in branches/xen-idc/src.
 
 At this point, your guest VM is ready to be composited for accelerated 3D graphics.  
 
@@ -172,18 +174,15 @@ Building: Host only
 Step 1: Building the 'raw' state tracker
 ----------------------------------------
 
-Required packages (Ubuntu): build-essential, scons, xorg-dev (for X headers), (Expat library)
+Required packages (Ubuntu): build-essential, scons, xorg-dev (for X headers), libexpat1-dev
 Required packages (SuSE): gcc, binutils, make, scons, xorg-x11-devel, libexpat-devel
 
-cd vgallium/trunk/src
+cd branches/xen-idc/src
 scons statetrackers=raw drivers=softpipe winsys=egl_xlib dri=no
 
-This should generate .../vgallium/trunk/src/build/linux-x86-64/lib/librawgal.so.0, a very simple library which is used by the compositor and which incorporates Tungsten's softpipe renderer.
+This should generate branches/xen-idc/src/build/linux-x86-64/lib/librawgal.so, a very simple library which is used by the compositor and which incorporates Tungsten's softpipe renderer.
 
-cd vgallium/trunk/src/build/linux-x86-64/lib
-ln -s librawgal.so.0 librawgal.so
-
-The compositor will need to be directed to this path at load-time in a similar way to the glxgears example above. The script vgallium/trunk/src/progs/xen3d/run.sh loads the compositor using this library, assuming it is located as above.
+The compositor will need to be directed to this path at load-time in a similar way to the glxgears example above. The script branches/xen-idc/src/progs/xen3d/run.sh loads the compositor using this library, assuming it is located as above.
 
 Step 2: Building Qemu and Xend
 ------------------------------
@@ -192,7 +191,7 @@ Required packages (Ubuntu): hermes1-dev (for pixel conversion), plus Xen's own r
 
 SuSE: There is no package for Hermes: download the source from www.clanlib.org, configure with --disable-x86asm, make and make install.
 
-First, obtain the sources for Xen-3.3.0, e.g. from the Xen website. Unpack these to some scratch folder; call it XEN. Now, copy the following files into XEN/tools/ioemu-qemu-xen: vgallium/trunk/src/progs/xen3d/qemu/xen3d.c, xen3d.h, Makefile, vl.c and Makefile.target.
+First, obtain the sources for Xen-3.3.0, e.g. from the Xen website. Unpack these to some scratch folder; call it XEN. Now, copy the following files into XEN/tools/ioemu-qemu-xen: branches/xen-idc/src/progs/xen3d/qemu/xen3d.c, xen3d.h, Makefile, vl.c and Makefile.target.
 
 cd XEN/tools/ioemu-qemu-xen
 make
@@ -202,7 +201,7 @@ This will replace your existing Qemu-dm with one which, when invoked with parame
 
 Finally we must alter xend such that it passes this parameter when appropriate:
 
-Copy vgallium/trunk/src/progs/xen3d/qemu/image.py into XEN/tools/python/xen/xend/image.py
+Copy branches/xen-idc/src/progs/xen3d/qemu/image.py into XEN/tools/python/xen/xend/image.py
 cd XEN/tools/python
 make
 make install
@@ -213,21 +212,19 @@ Step 3: Building the compositor
 Required packages (Ubuntu): makedepend (Xorg packages from earlier are enough)
 Required packages (SuSE): xorg-x11-server-sdk, g++ (makedepend is installed by default)
 
-First, edit the Makefile in vgallium/trunk/src/progs/xen3d and set X11_SOURCES to the location of the X server's header files. Typically this would be /usr/include, but if your X server lives elsewhere this needs amending. Further, XEXT_SOURCES must be set to build target of the X extension headers. The default sugegsted above was /usr/include also.
-
-The Makefile also includes the variable QEMU_SOURCES: if you unpacked Xen-3.3.0 in XEN, set this to XEN/tools/ioemu-qemu-xen.
+First, edit the Makefile in branches/xen-idc/src/progs/xen3d and set X11_SOURCES to the location of the X server's header files. Typically this would be /usr/include, but if your X server lives elsewhere this needs amending. Further, XEXT_SOURCES must be set to build target of the X extension headers. The default sugegsted above was /usr/include also.
 
 Next you must build Mesa itself in order to produce libEGL, which the compositor uses.
 
-This can be done by running 'make linux-x86-64' in /vgallium/trunk/src.
+This can be done by running 'make linux-x86-64' in branches/xen-idc/src.
 
-This should build vgallium/trunk/src/lib64/libEGL.so amongst other GL-related libraries. It will also place an ordinary (i.e. non-remoted) libGL.so in the same location.
+This should build branches/xen-idc/src/lib64/libEGL.so amongst other GL-related libraries. It will also place an ordinary (i.e. non-remoted) libGL.so in the same location.
 
 Finally build the compositor:
 
-cd vgallium/trunk/src/progs/xen3d
+cd branches/xen-idc/src/progs/xen3d
 mkdir obj
-./config.sh arch (where arch is x86 or x86-64 as appropriate to your architecture)
+bash config.sh arch (where arch is x86 or x86-64 as appropriate to your architecture)
 make
 
 This will produce an executable named xen3d in the same location.
@@ -242,7 +239,7 @@ Now configure a guest VM such that it will use the compositor for 2D display. Do
 
 Once it is so configured, start the VM as usual (e.g. xm create myguest). The compositor should report a new Qemu connection and state the originating domain.
 
-Once the domain is running, and before X or 3D apps begin to run, we must start the Xen3d helper daemon. This builds in (vgallium repo root)/src/progs/xen3d/xen3dd and is called xen3dd. This could be added to a startup script if desired. the daemon takes no arguments.
+Once the domain is running, and before X or 3D apps begin to run, we must start the Xen3d helper daemon. This builds in xen3d repo, branches/src/progs/xen3d/xen3dd and is called xen3dd. This could be added to a startup script if desired. the daemon takes no arguments.
 
 Now we must start the guest X server, which will host the remoted applications. Start the server, ensuring it is configured to load the xen3dext extension as above, and it will connect . The compositor will report the X extension has connected at this point; if this does not happen, check the helper daemon is running. If it still does not happen, try running the helper daemon in verbose debugging mode (invoke it as xen3dd -debug) and observe whether it is able to access Xenstore.
 
