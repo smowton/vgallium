@@ -245,8 +245,8 @@ static __DRIdriver *OpenDriver(const char *driverName)
    /* Attempt to make sure libGL symbols will be visible to the driver */
    glhandle = dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
 
-   if (geteuid() == getuid()) {
-      /* don't allow setuid apps to use LIBGL_DRIVERS_PATH */
+   if (geteuid() == getuid() && getegid() == getgid()) {
+      /* don't allow setuid or setgid apps to use LIBGL_DRIVERS_PATH */
       libPaths = getenv("LIBGL_DRIVERS_PATH");
       if (!libPaths)
          libPaths = getenv("LIBGL_DRIVERS_DIR"); /* deprecated */
